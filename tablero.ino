@@ -14,6 +14,9 @@ int pointsTeamA = 0;
 int pointsTeamB = 0;
 int setTeamA=0;
 int setTeamB=0;
+bool inTieBreak = false;
+int tieBreakPointsTeamA = 0;
+int tieBreakPointsTeamB = 0;
 
 void setup() {
   Serial.begin(115200);
@@ -29,32 +32,54 @@ void updateSet(char team){
       setTeamB++;
   }
 
-  Serial.printf("Sets: P1(%d) - P2(%d)\n", setTeamA, setTeamB);
-
 }
   
 
 void updateGame(char team) {
   if (team == 'A') {
     gameTeamA++;
-    if(gameTeamA == 6){
+    if (gameTeamA >= 6 && (gameTeamA - gameTeamB >= 2 || (gameTeamA == 6 && gameTeamB == 6))) {
+      if (gameTeamA == 6 && gameTeamB == 6) {
+        // Iniciar tie-break
+        inTieBreak = true;
+      } else {
         updateSet(team);
         resetPoints();
         resetScore();
       }
+    }
   } else if (team == 'B') {
     gameTeamB++;
-    if(gameTeamB == 6){
+    if (gameTeamB >= 6 && (gameTeamB - gameTeamA >= 2 || (gameTeamB == 6 && gameTeamA == 6))) {
+      if (gameTeamB == 6 && gameTeamA == 6) {
+        // Iniciar tie-break
+        inTieBreak = true;
+      } else {
         updateSet(team);
         resetPoints();
         resetScore();
       }
+    }
   }
-
-  Serial.printf("Marcador: P1(%d) - P2(%d)\n", gameTeamA, gameTeamB);
 }
 
 void updatePoints(char team) {
+  if (inTieBreak) {
+    if (team == 'A') {
+      tieBreakPointsTeamA++;
+    } else if (team == 'B') {
+      tieBreakPointsTeamB++;
+    }
+
+    // Verificar condiciones de victoria en el tie-break
+    if ((tieBreakPointsTeamA >= 7 && tieBreakPointsTeamA - tieBreakPointsTeamB >= 2) ||
+        (tieBreakPointsTeamB >= 7 && tieBreakPointsTeamB - tieBreakPointsTeamA >= 2)) {
+      updateSet(team);
+      resetPoints();
+      resetScore();
+      inTieBreak = false;
+    }
+  } else{
   if (pointsTeamA == 40 && pointsTeamB == 40) {
     // Punto de oro, el próximo que anota gana
     if (team == 'A') {
@@ -92,13 +117,16 @@ void updatePoints(char team) {
       }
     }
   }
-
-  Serial.printf("Puntos: P1(%d) - P2(%d)\n", pointsTeamA, pointsTeamB);
+}
 }
 
 void resetPoints() {
   pointsTeamA = 0;
   pointsTeamB = 0;
+  if (inTieBreak) {
+    tieBreakPointsTeamA = 0;
+    tieBreakPointsTeamB = 0;
+  }
 }
 
 void resetScore() {
@@ -115,14 +143,17 @@ void loop() {
         Serial.println("Resetear marcador");
         resetScore();
         resetPoints();
+        actualizarMarcador();
         break;
       case 'A':
         Serial.println("Punto de pareja 1");
         updatePoints('A');
+        actualizarMarcador();
         break;
       case 'B':
         Serial.println("Punto de pareja 2");
         updatePoints('B');
+        actualizarMarcador();
         break;
       // Agrega más casos según tus necesidades
     }
@@ -131,3 +162,22 @@ void loop() {
     delay(20);
   }
 }
+
+void actualizarMarcador(void){
+        Serial.println("--------------");
+        Serial.printf("Sets: P1(%d) - P2(%d)\n", setTeamA, setTeamB);
+        Serial.println("--------------");
+        Serial.printf("Games: P1(%d) - P2(%d)\n", gameTeamA, gameTeamB);
+        
+        
+
+    if (inTieBreak) {
+    Serial.println("--------------");
+    Serial.printf("Tie-Break: P1(%d) - P2(%d)\n", tieBreakPointsTeamA, tieBreakPointsTeamB);
+  } else {
+    Serial.println("--------------");
+    Serial.printf("Puntos: P1(%d) - P2(%d)\n", pointsTeamA, pointsTeamB);
+  }
+  Serial.println("");
+  
+  }
