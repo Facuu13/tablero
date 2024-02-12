@@ -1,0 +1,53 @@
+struct Button {
+  const uint8_t PIN;
+  bool pressed;
+};
+
+Button button_reset = {18,false};
+Button button_pareja1 = {19,false};
+Button button_paraje2 = {17,false};
+
+void IRAM_ATTR resetear_marcador() {
+  button_reset.pressed = true;
+}
+
+void IRAM_ATTR sumar_pareja1() {
+  button_pareja1.pressed = true;
+}
+
+void IRAM_ATTR sumar_pareja2() {
+  button_paraje2.pressed = true;
+}
+
+void setup() {
+  Serial.begin(115200);
+  pinMode(button_reset.PIN, INPUT_PULLUP);
+  attachInterrupt(button_reset.PIN, resetear_marcador, FALLING);
+
+  pinMode(button_pareja1.PIN, INPUT_PULLUP);
+  attachInterrupt(button_pareja1.PIN, sumar_pareja1, FALLING);
+
+  pinMode(button_paraje2.PIN, INPUT_PULLUP);
+  attachInterrupt(button_paraje2.PIN, sumar_pareja2, FALLING);
+}
+
+void loop() {
+  if (button_reset.pressed) {
+      delay(500);
+      Serial.println("reseteamos el marcador");
+      button_reset.pressed = false;
+  }
+
+  if (button_pareja1.pressed) {
+      delay(500);
+      Serial.println("punto de pareja 1");
+      button_pareja1.pressed = false;
+  }
+
+  if (button_paraje2.pressed) {
+      delay(500);
+      Serial.println("punto de pareja 2");
+      button_paraje2.pressed = false;
+  }
+
+}
